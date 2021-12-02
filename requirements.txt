@@ -159,7 +159,6 @@ pytz==2021.1
 pytz-deprecation-shim==0.1.0.post0
 pywhatkit==3.9
 pywin32-ctypes==0.2.0
-pywinpty==1.1.5
 PyYAML==5.4.1
 pyzmq==22.1.0
 readme-renderer==29.0
