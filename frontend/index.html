@@ -1,0 +1,24 @@
+<html>
+<head>
+    <title>Item Details</title>
+</head>
+<body>
+    <div id="test"></div>
+    <script>
+        fetch('http://127.0.0.1:8000/currency_id_list/?symbols=USD')
+    // Handle success
+    .then(response => response.json())  // convert to json
+    .then(json => document.getElementById('test').innerText = json)    //print data to console
+    .catch(err => console.log('Request Failed', err))
+    function appendData(data) {
+            var mainContainer = document.getElementById("test");
+            for (var i = 0; i < data.length; i++) {
+                var div = document.createElement("div");
+                div.innerHTML = 'Name: ' + data[i].firstName + ' ' + data[i].lastName;
+                mainContainer.appendChild(div);
+            }
+        }
+    </script>
+    <h1></h1>
+</body>
+</html>

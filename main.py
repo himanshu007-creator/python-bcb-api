@@ -4,9 +4,22 @@ from bcb import currency as cr
 import pandas as pd
 from bcb import sgs
 from datetime import date, datetime, timedelta
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title='Python-BCB v1.0.0',
               description='An API integrating functionality of <a href="https://github.com/wilsonfreitas/python-bcb">Python-bcb</a> module. Made by <a href="https://github.com/himanshu007-creator">Himanshu</a>')
+
+origins = [
+    "*",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/", tags=["root"])
@@ -85,7 +98,7 @@ def c_id(symbol: str):
     - **Response**:
         - ID of currency identified by symbol
     """
-    x = str(cr.get_currency_id(symbol))
+    x = str(cr.get_currency_id(symbol.upper()))
     return{"ID": x}
 
 
@@ -195,7 +208,7 @@ def bid_ask(symbol: str, start_date: str, end_date: str):
 
 
 @ app.get("/sgs/", tags=["sgs"])
-def sgs(codes: str, start_date: str, end_date: str, last: Optional[int] = None, join: Optional[bool] = False):
+def get_sgs(codes: str, start_date: str, end_date: str, last: Optional[int] = None, join: Optional[bool] = False):
     """
     - **Request**:
         - **codes**: eg {'IPCA': 433, 'IGPM': 189}
