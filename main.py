@@ -39,11 +39,11 @@ def c_id_list(symbols: str):
         - list with ID of the currencies identified by given symbols
     """
     symbols = symbols.split(',')
-    l = {}
+    l = []
     for i in symbols:
         i = i.upper()
         x = str(cr.get_currency_id(i))
-        l.update({
+        l.append({
             i: x,
         })
     return l

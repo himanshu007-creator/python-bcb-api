@@ -5,7 +5,15 @@
 <body>
     <div id="test"></div>
     <script>
-        fetch('http://127.0.0.1:8000/currency_id_list/?symbols=USD')
+        let ans = ()=>{
+            fetch(
+"http://127.0.0.1:8000/currency_id_list/?symbols=USD")
+            .then((res) => res.json())
+            .then((json) => {
+                console.log(json)
+            })
+        }
+        let result = await fetch fetch('http://127.0.0.1:8000/currency_id_list/?symbols=USD')
     // Handle success
     .then(response => response.json())  // convert to json
     .then(json => document.getElementById('test').innerText = json)    //print data to console
