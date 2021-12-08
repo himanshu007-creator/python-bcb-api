@@ -99,7 +99,8 @@ def c_id(symbol: str):
         - ID of currency identified by symbol
     """
     x = str(cr.get_currency_id(symbol.upper()))
-    return{"ID": x}
+    return{"country": symbol,
+           "ID": x}
 
 
 @app.get("/currency_type/", tags=["currency"])
@@ -112,22 +113,14 @@ def c_type(symbols: str):
     """
     ans = []
     x = cr.get_currency_list().values.tolist()
-    if(',' not in symbols):
+    symbols = symbols.split(',')
+    l = []
+    for j in symbols:
         for i in x:
-            if(i[2] == symbols.upper()):
-                ans = str(i[5])
-        return {'type': ans}
-    else:
-        symbols = symbols.split(',')
-        l = {}
-        for j in symbols:
-            for i in x:
-                if(i[2] == j.upper()):
-                    d = {j: str(i[5])}
-                    l.update(d)
-        return l
-
-        # reactable
+            if(i[2] == j.upper()):
+                d = {'symbol': j, 'type': str(i[5])}
+                l.append(d)
+    return l
 
 
 @ app.get("/currency/", tags=["currency"])
@@ -146,17 +139,14 @@ def read_item(symbols: str, start_date: str, end_date: str, side: Optional[str] 
     symbols = symbols if(len(symbols) >= 2) else symbols[0]
     start_date = datetime.strptime(start_date, '%Y-%m-%d')
     end_date = datetime.strptime(end_date, '%Y-%m-%d')
-    ask = {}
-    bid = {}
-    ans = 0
     if(side is not None and group_by is not None):
         df = cr.get(symbols, start_date, end_date,
                     side=side, group_by=group_by).to_dict()
-        ans = df
+        ans = [df]
     elif((side is not None and group_by is None) or (side is None and group_by is not None)):
         ans = {"resp": "invalid **Response**"}
     else:
-        ans = cr.get(symbols, start_date, end_date).to_dict()
+        ans = [cr.get(symbols, start_date, end_date).to_dict()]
     return ans
 
 

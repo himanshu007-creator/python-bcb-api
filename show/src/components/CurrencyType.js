@@ -1,29 +1,27 @@
 import React, { useState } from "react";
 
-const CurrencyId = () => {
+const CurrencyType = () => {
   const [resp, setResp] = useState([]);
-  const [symbols, setSymbols] = useState("");
+  const [symbol, setSymbol] = useState("");
 
   const change = (e) => {
-    setSymbols(e.currentTarget.value);
-    console.log(symbols);
+    setSymbol(e.currentTarget.value.toUpperCase());
   };
 
   const fetchApi = async () => {
-    const response = await fetch(
-      `http://127.0.0.1:8000/currency_id/?symbol=${symbols}`
-    );
+    const path = symbol === "" ? "" : `?symbols=${symbol}`;
+    const response = await fetch(`http://127.0.0.1:8000/currency_type/${path}`);
     const resJson = await response.json();
     setResp(resJson);
   };
 
   return (
     <div>
-      <label htmlFor="basic-url">Enter Symbols</label>
+      <label htmlFor="basic-url">Enter Type</label>
       <div className="input-group mb-3">
         <div className="input-group-prepend">
           <span className="input-group-text" id="basic-addon3">
-            GET/country_id/
+            GET/currency_type/
           </span>
         </div>
         <input
@@ -41,7 +39,6 @@ const CurrencyId = () => {
         <div className="input-group-append">
           <button
             onClick={fetchApi}
-            onChange={fetchApi}
             className="btn btn-outline-secondary"
             type="button"
             id="button-addon2"
@@ -50,24 +47,31 @@ const CurrencyId = () => {
           </button>
         </div>
       </div>
-      <table className="table table-dark">
+      <table className="table table-dark table-bordered table-striped mb-0 ">
         <thead>
           <tr>
-            <td>Country</td>
-            <td>ID</td>
+            <td>Symbol</td>
+            <td>Type</td>
           </tr>
         </thead>
-        <tbody>
-          {
+        <tbody
+
+        // style={{
+        //   position: "relative",
+        //   height: "20px!important",
+        //   overflow: "scroll",
+        // }}
+        >
+          {resp.map((i) => (
             <tr>
-              <td>{resp.country}</td>
-              <td>{resp.ID}</td>
+              <td>{i.symbol}</td>
+              <td>{i.type}</td>
             </tr>
-          }
+          ))}
         </tbody>
       </table>
     </div>
   );
 };
 
-export default CurrencyId;
+export default CurrencyType;

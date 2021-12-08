@@ -1,32 +1,34 @@
 <html>
 <head>
     <title>Item Details</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-fQybjgWLrvvRgtW6bFlB7jaZrFsaBXjsOMm/tB9LTS58ONXgqbR9W8oWht/amnpF" crossorigin="anonymous"></script>
+    
 </head>
 <body>
-    <div id="test"></div>
-    <script>
-        let ans = ()=>{
-            fetch(
-"http://127.0.0.1:8000/currency_id_list/?symbols=USD")
-            .then((res) => res.json())
-            .then((json) => {
-                console.log(json)
-            })
-        }
-        let result = await fetch fetch('http://127.0.0.1:8000/currency_id_list/?symbols=USD')
-    // Handle success
-    .then(response => response.json())  // convert to json
-    .then(json => document.getElementById('test').innerText = json)    //print data to console
-    .catch(err => console.log('Request Failed', err))
-    function appendData(data) {
-            var mainContainer = document.getElementById("test");
-            for (var i = 0; i < data.length; i++) {
-                var div = document.createElement("div");
-                div.innerHTML = 'Name: ' + data[i].firstName + ' ' + data[i].lastName;
-                mainContainer.appendChild(div);
-            }
-        }
-    </script>
-    <h1></h1>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="#">BCB-API</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+          <ul class="navbar-nav ">
+        
+            <button type="button" class="btn btn-primary btn-sm">Small button</button>
+            <button class="btn btn-sm btn-outline-secondary" type="button">Smaller button</button>
+            <button class="btn btn-sm btn-outline-secondary" type="button">Smaller button</button>
+            <button class="btn btn-sm btn-outline-secondary" type="button">Smaller button</button>
+            <button class="btn btn-sm btn-outline-secondary" type="button">Smaller button</button>
+            <button class="btn btn-sm btn-outline-secondary" type="button">Smaller button</button>
+            <button class="btn btn-sm btn-outline-secondary" type="button">Smaller button</button>
+            <button class="btn btn-sm btn-outline-secondary" type="button">Smaller button</button>
+
+            <button class="btn btn-outline-success btn-sm" type="button">
+                Main button
+              </button>
+          </ul>
+        </div>
+      </nav>
 </body>
 </html>

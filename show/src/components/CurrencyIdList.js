@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-const CurrencyId = () => {
+const CurrencyIdList = () => {
   const [resp, setResp] = useState([]);
   const [symbols, setSymbols] = useState("");
 
@@ -11,7 +11,7 @@ const CurrencyId = () => {
 
   const fetchApi = async () => {
     const response = await fetch(
-      `http://127.0.0.1:8000/currency_id/?symbol=${symbols}`
+      `http://127.0.0.1:8000/currency_id_list/?symbols=${symbols}`
     );
     const resJson = await response.json();
     setResp(resJson);
@@ -41,7 +41,6 @@ const CurrencyId = () => {
         <div className="input-group-append">
           <button
             onClick={fetchApi}
-            onChange={fetchApi}
             className="btn btn-outline-secondary"
             type="button"
             id="button-addon2"
@@ -58,16 +57,16 @@ const CurrencyId = () => {
           </tr>
         </thead>
         <tbody>
-          {
+          {resp.map((i) => (
             <tr>
-              <td>{resp.country}</td>
-              <td>{resp.ID}</td>
+              <td>{Object.keys(i)[0] === "" ? "" : Object.keys(i)[0]}</td>
+              <td>{Object.values(i)[0]}</td>
             </tr>
-          }
+          ))}
         </tbody>
       </table>
     </div>
   );
 };
 
-export default CurrencyId;
+export default CurrencyIdList;
