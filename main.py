@@ -113,7 +113,7 @@ def c_type(symbols: str):
     """
     ans = []
     x = cr.get_currency_list().values.tolist()
-    symbols = symbols.split(',')
+    symbols = [i.upper() for i in symbols.split(',')]
     l = []
     for j in symbols:
         for i in x:
@@ -135,6 +135,7 @@ def read_item(symbols: str, start_date: str, end_date: str, side: Optional[str] 
     - **Response**:
         - series of rates quoted in BRL from start_date till end_date
     """
+    ans = []
     symbols = [i.upper() for i in symbols.split(',')]
     symbols = symbols if(len(symbols) >= 2) else symbols[0]
     start_date = datetime.strptime(start_date, '%Y-%m-%d')
@@ -142,11 +143,16 @@ def read_item(symbols: str, start_date: str, end_date: str, side: Optional[str] 
     if(side is not None and group_by is not None):
         df = cr.get(symbols, start_date, end_date,
                     side=side, group_by=group_by).to_dict()
-        ans = [df]
+        for i in df:
+            ans.append({'country': i,
+                        'data': [{'date': k, 'rate': v} for k, v in df[i].items()]})
     elif((side is not None and group_by is None) or (side is None and group_by is not None)):
         ans = {"resp": "invalid **Response**"}
     else:
-        ans = [cr.get(symbols, start_date, end_date).to_dict()]
+        df = cr.get(symbols, start_date, end_date).to_dict()
+        for i in df:
+            ans.append({'country': i,
+                        'data': [{'date': k, 'rate': v} for k, v in df[i].items()]})
     return ans
 
 

@@ -7,13 +7,13 @@ import CurrencyId from "./components/CurrencyId";
 import CurrencyType from "./components/CurrencyType";
 import Currency from "./components/Currency";
 function App() {
-  const [Cid, setCid] = useState(false);
   return (
     <div>
       <Navbar />
-      {/* <CurrencyIdList /> */}
-      {/* <CurrencyList /> */}
-      {/* <CurrencyId /> */}
+      {/* <CurrencyIdList />
+      <CurrencyList />
+      <CurrencyId />
+       */}
       {/* <CurrencyType /> */}
       <Currency />
     </div>
