@@ -1,13 +1,197 @@
 from fastapi import FastAPI, Path
 from typing import Optional
-from bcb import currency as cr
-import pandas as pd
-from bcb import sgs
-from datetime import date, datetime, timedelta
 from fastapi.middleware.cors import CORSMiddleware
+from uvicorn import run
+import requests
+import json
 
-app = FastAPI(title='Python-BCB v1.0.0',
-              description='An API integrating functionality of <a href="https://github.com/wilsonfreitas/python-bcb">Python-bcb</a> module. Made by <a href="https://github.com/himanshu007-creator">Himanshu</a>')
+
+def currency(orderby=None, filter=None, skip=None, top=None):
+    """
+    Provides the list of currencies for which this data set is available.
+     Args:
+        orderby(str)[Optional]: Entity properties order selection. e.g. Name asc, Age desc.
+        filter (str)[Optional]: Entities filter selection. e.g. Name eq ‘John’
+        skip   (str)[Optional]: Index (greater than or equal to zero) of the first entity that will be returned
+        top    (str)[Optional]: Maximum number (greater than zero) of entities that will be returned
+    Returns:
+        list: Show Symbol,CurrencyName,CurrencyType.
+    """
+    l = []
+    url = "https://olinda.bcb.gov.br/olinda/service/PTAX/version/v1/odata/Currencies?$top=100&$format=json"
+
+    response = requests.get(url)
+    fields = response.content.decode('utf8').replace("'", '"')
+    data = json.loads(fields)
+    for i in data['value']:
+        l.append({
+            "Symbol": i['simbolo'],
+            "CurrencyName": i['nomeFormatado'],
+            "CurrencyType": i['tipoMoeda']
+        })
+    return l
+
+
+def exchange_date_rate(currency, date, orderby=None, filter=None, skip=None, top=None):
+    """
+    Provides bid and offer parities, bid and offer rates for the requested date. There are 5 bulletins daily.
+    Args:
+        currrency (str)         : 3 letter symbol e.g 'USD'
+        date (str)              : format 'MM-DD-YYYY'
+        orderby (str) [Optional]: Entity properties order selection. e.g. Name asc, Age desc
+        filter (str) [Optional] : Entities filter selection. e.g. Name eq ‘John’
+        skip (str) [Optional]   : Index (greater than or equal to zero) of the first entity that will be returned
+        top (str)[Optional]     : Maximum number (greater than zero) of entities that will be returned
+    Returns:
+        list: Provides bid and offer parities, bid and offer rates for the requested date. There are 5 bulletins daily.
+    """
+    l = []
+    url = "https://olinda.bcb.gov.br/olinda/service/PTAX/version/v1/odata/ExchangeRateDate(moeda=@moeda,dataCotacao=@dataCotacao)?%40moeda='{}'&%40dataCotacao='{}'&%24format=json".format(
+        currency, date)
+    if(orderby):
+        url += "&%24orderby="+orderby
+    if(filter):
+        url += "&%24filter ="+filter
+    if(skip):
+        url += "&%24filter="+str(skip)
+    if(top):
+        url += "&%24top="+str(top)
+    res = requests.get(url)
+    dd = res.content.decode('utf8').replace("'", '"')
+    data = json.loads(dd)
+    for i in data['value']:
+        d = {
+            'BidParity': i['paridadeCompra'],
+            'OfferParity': i['paridadeVenda'],
+            'BidRate': i['cotacaoCompra'],
+            'OfferRate': i['cotacaoVenda'],
+            'DateTime': i['dataHoraCotacao'],
+            'BulletinTime': i['tipoBoletim'],
+        }
+        l.append(d)
+    return l
+
+
+def exchange_rate_period(currency, start_date, end_date, orderby=None, filter=None, skip=None, top=None):
+    """
+    Provides bid and offer parities, bid and offer rates for the requested time period. There are 5 bulletins daily.
+     Args:
+        currency (str)          : 3 letter symbol e.g 'USD'
+        start_date (str)        : format 'MM-DD-YYYY'
+        end_date (str)          : format 'MM-DD-YYYY'
+        orderby (str) [Optional]: Entity properties order selection. e.g. Name asc, Age desc
+        filter (str) [Optional] : Entities filter selection. e.g. Name eq ‘John’
+        skip (int) [Optional]   : Index (greater than or equal to zero) of the first entity that will be returned
+        top (int )[Optional]    : Maximum number (greater than zero) of entities that will be returned
+
+    Returns:
+        bool: The return value. True for success, False otherwise.
+    """
+
+    url = "https://olinda.bcb.gov.br/olinda/service/PTAX/version/v1/odata/ExchangeRatePeriod(moeda=@moeda,dataInicial=@dataInicial,dataFinalCotacao=@dataFinalCotacao)?@moeda='{}'&@dataInicial='{}'&@dataFinalCotacao='{}'&$top=100&$format=json".format(
+        currency, start_date, end_date)
+
+    list = []
+    if (orderby):
+        url += "&%24orderby="+orderby
+    if(filter):
+        url += "&%24filter ="+filter
+    if(skip):
+        url += "&%24filter="+str(skip)
+    if(top):
+        url += "&%24top="+str(top)
+
+    response = requests.get(url)
+    dd = response.content.decode('utf8').replace("'", '"')
+    data = json.loads(dd)
+
+    for i in data['value']:
+        fields = {
+            'BidParity': i['paridadeCompra'],
+            'OfferParity': i['paridadeVenda'],
+            'BidRate': i['cotacaoCompra'],
+            'OfferRate': i['cotacaoVenda'],
+            'DateTime': i['dataHoraCotacao'],
+            'BulletinTime': i['tipoBoletim'],
+        }
+        list.append(fields)
+    return list
+
+
+def dollar_rate_date(date, orderby=None, filter=None, skip=None, top=None):
+    """
+    Provides bid and offer rates for the requested date.
+     Args:
+        date (str)              : format 'MM-DD-YYYY'
+        orderby (str) [Optional]: Entity properties order selection. e.g. Name asc, Age desc
+        filter (str) [Optional] : Entities filter selection. e.g. Name eq ‘John’
+        skip (int) [Optional]   : Index (greater than or equal to zero) of the first entity that will be returned
+        top (int) [Optional]    : Maximum number (greater than zero) of entities that will be returned
+
+    Returns:
+        object: bid and offer rates for the requested date.
+    """
+    url = "https://olinda.bcb.gov.br/olinda/service/PTAX/version/v1/odata/DollarRateDate(dataCotacao=@dataCotacao)?%40dataCotacao='{}'&%24format=json".format(
+        str(date))
+    if(orderby):
+        url += "&%24orderby="+orderby
+    if(filter):
+        url += "&%24filter ="+filter
+    if(skip):
+        url += "&%24filter="+str(skip)
+    if(top):
+        url += "&%24top="+str(top)
+    res = requests.get(url)
+    dd = res.content.decode('utf8').replace("'", '"')
+    data = json.loads(dd)
+    # return data['value']
+    return {
+        "BidRate": data['value'][0]['cotacaoCompra'],
+        "OfferRate": data['value'][0]['cotacaoVenda'],
+        "DateTime": data['value'][0]['dataHoraCotacao']
+    }
+
+
+def dollar_rate_period(start_date, end_date, orderby=None, filter=None, skip=None, top=None):
+    """
+    Provides bid and offer rates for the requested time period.
+     Args:
+        start_date (str): format 'MM-DD-YYYY'
+        end_date (str): format 'MM-DD-YYYY'
+        orderby (str) [Optional] : Entity properties order selection. e.g. Name asc, Age desc
+        filter (str) [Optional] : Entities filter selection. e.g. Name eq ‘John’
+        skip (int) [Optional] : Index (greater than or equal to zero) of the first entity that will be returned
+        top (int) [Optional] : Maximum number (greater than zero) of entities that will be returned
+
+    Returns:
+        object: Provides bid and offer rates for the requested date
+    """
+
+    url = "https://olinda.bcb.gov.br/olinda/service/PTAX/version/v1/odata/DollarRatePeriod(dataInicial=@dataInicial,dataFinalCotacao=@dataFinalCotacao)?@dataInicial='{}'&@dataFinalCotacao='{}'&$top=100&$format=json".format(
+        start_date, end_date)
+
+    if (orderby):
+        url += "&%24orderby="+orderby
+    if (filter):
+        url += "&%24filter ="+filter
+    if(skip):
+        url += "&%24filter="+str(skip)
+    if(top):
+        url += "&%24top="+str(top)
+
+    response = requests.get(url)
+    dd = response.content.decode('utf8').replace("'", '"')
+    data = json.loads(dd)
+
+    return {
+        "BidRate": data['value'][0]['cotacaoCompra'],
+        "OfferRate": data['value'][0]['cotacaoVenda'],
+        "DateTime": data['value'][0]['dataHoraCotacao']
+    }
+
+
+app = FastAPI(title='Python-Depin v1.0.0',
+              description='An API integrating functionality of <a href="https://opendata.bcb.gov.br/dataset/exchange-rates-daily-bulletins">Python-depin</a> module.')
 
 origins = [
     "*",
@@ -30,202 +214,85 @@ def root():
     return{"Hi!": "please visit /docs for documentation"}
 
 
-@app.get("/currency_id_list/", tags=["currency"])
-def c_id_list(symbols: str):
+@app.get('/Currency', tags=["Depin"])
+def currencies(orderby: Optional[str] = None, filter: Optional[str] = None, skip: Optional[str] = None, top: Optional[str] = None):
     """
     - **Request**:
-        - **symbols**: symbol/symbols of currency eg USD
+        - **orderby [Optional]**: Entity properties order selection. e.g. Name asc, Age desc
+        - **filter [Optional]**: Entities filter selection. e.g. Name eq ‘John’
+        - **skip [Optional]**: Index (greater than or equal to zero) of the first entity that will be returned
+        - **top [Optional]**: Maximum number (greater than zero) of entities that will be returned
     - **Response**:
-        - list with ID of the currencies identified by given symbols
+        - Symbol, CurrencyName, CurrencyType
     """
-    symbols = symbols.split(',')
-    l = []
-    for i in symbols:
-        i = i.upper()
-        x = str(cr.get_currency_id(i))
-        l.append({
-            i: x,
-        })
-    return l
+    return(currency())
 
 
-@app.get("/currency_list/", tags=["currency"])
-def c_list(*, type: Optional[str] = None):
+@app.get('/DollarRateDate', tags=["Depin"])
+def Bid_and_offer_rates_for_the_requested_date(date: str, orderby: Optional[str] = None, filter: Optional[str] = None, skip: Optional[int] = None, top: Optional[int] = None):
     """
     - **Request**:
-        - **types [Optional]**: possible values (A or B)
+        - **date**: format 'MM-DD-YYYY'
+        - **orderby [Optional]**: Entity properties order selection. e.g. Name asc, Age desc
+        - **filter [Optional]**: Entities filter selection. e.g. Name eq ‘John’
+        - **skip [Optional]**: Index (greater than or equal to zero) of the first entity that will be returned
+        - **top [Optional]**: Maximum number (greater than zero) of entities that will be returned
     - **Response**:
-        - get informations of currencies whose type is in types
+        - Provides bid and offer rates for the requested date.
     """
-    x = cr.get_currency_list()
-    x = x.values.tolist()
-    l = []
-    if(type is None):
-        for i in x:
-
-            y = {
-                "code": i[0],
-                "name": i[1],
-                "symbol": i[2],
-                "country_code": i[3],
-                "country_name": i[4],
-                "type": i[5],
-                "execution_date": i[6]
-            }
-            l.append(y)
-    else:
-        type = type.capitalize()
-        for i in x:
-            y = {
-                "code": i[0],
-                "name": i[1],
-                "symbol": i[2],
-                "country_code": i[3],
-                "country_name": i[4].strip(),
-                "type": i[5],
-                "execution_date": i[6]
-            }
-            if(y["type"] == type):
-                l.append(y)
-    return l
+    return(dollar_rate_date(date, orderby, filter, skip, top))
 
 
-@app.get("/currency_id/", tags=["currency"])
-def c_id(symbol: str):
+@app.get("/DollarRatePeriod", tags=["Depin"])
+def Bid_and_offer_rates_for_the_requested_period(start_date: str, end_date: str, orderby: Optional[str] = None, filter: Optional[str] = None, skip: Optional[int] = None, top: Optional[int] = None):
     """
     - **Request**:
-        - **symbol**: symbol of currency eg USD
+        - **currency**: 3 letter symbol e.g 'USD'
+        - **start_date**: format 'MM-DD-YYYY'
+        - **end_date**: format 'MM-DD-YYYY'
+        - **orderby [Optional]**: Entity properties order selection. e.g. Name asc, Age desc
+        - **filter [Optional]**: Entities filter selection. e.g. Name eq ‘John’
+        - **skip [Optional]**: Index (greater than or equal to zero) of the first entity that will be returned
+        - **top [Optional]**: Maximum number (greater than zero) of entities that will be returned
     - **Response**:
-        - ID of currency identified by symbol
+        - Provides bid and offer rates for the requested date.
     """
-    x = str(cr.get_currency_id(symbol.upper()))
-    return{"country": symbol,
-           "ID": x}
+
+    return(dollar_rate_period(start_date, end_date, orderby, filter, skip, top))
 
 
-@app.get("/currency_type/", tags=["currency"])
-def c_type(symbols: str):
+@app.get('/ExchangeRateDate', tags=['Depin'])
+def call(currency, date, orderby: Optional[str] = None, filter: Optional[str] = None, skip: Optional[int] = None, top: Optional[int] = None):
     """
     - **Request**:
-        - **symbols**: symbol/symbols of currency eg USD
+        - **currency**: 3 letter symbol e.g 'USD'
+        - **date**: format 'MM-DD-YYYY'
+        - **orderby [Optional]**: Entity properties order selection. e.g. Name asc, Age desc
+        - **filter [Optional]**: Entities filter selection. e.g. Name eq ‘John’
+        - **skip [Optional]**: Index (greater than or equal to zero) of the first entity that will be returned
+        - **top [Optional]**: Maximum number (greater than zero) of entities that will be returned
     - **Response**:
-        - type of currencies (A or B) given by symbols
+        - Provides bid and offer parities, bid and offer rates for the requested date. There are 5 bulletins daily.
     """
-    ans = []
-    x = cr.get_currency_list().values.tolist()
-    symbols = [i.upper() for i in symbols.split(',')]
-    l = []
-    for j in symbols:
-        for i in x:
-            if(i[2] == j.upper()):
-                d = {'symbol': j, 'type': str(i[5])}
-                l.append(d)
-    return l
+    return(exchange_date_rate(currency, date, orderby, filter, skip, top))
 
 
-@ app.get("/currency/", tags=["currency"])
-def read_item(symbols: str, start_date: str, end_date: str, side: Optional[str] = None, group_by: Optional[str] = None):
+@app.get("/ExchangeRatePeriod", tags=["Depin"])
+def exchange_rate_period(currency, start_date, end_date, orderby: Optional[str] = None, filter: Optional[str] = None, skip: Optional[int] = None, top: Optional[int] = None):
     """
     - **Request**:
-        - **symbols**: symbol/symbols of currency eg USD
-        - **start_date**: format [yyyy-mm-dd]
-        - **end_date**: format [yyyy-mm-dd]
-        - **side [Optional]**
-        - **group_by [Optional]**
+        - **currency**: 3 letter symbol e.g 'USD'
+        - **start_date**: format 'MM-DD-YYYY'
+        - **end_date**: format 'MM-DD-YYYY'
+        - **orderby [Optional]**: Entity properties order selection. e.g. Name asc, Age desc
+        - **filter [Optional]**: Entities filter selection. e.g. Name eq ‘John’
+        - **skip [Optional]**: Index (greater than or equal to zero) of the first entity that will be returned
+        - **top [Optional]**: Maximum number (greater than zero) of entities that will be returned
     - **Response**:
-        - series of rates quoted in BRL from start_date till end_date
+        -  Bulletin - Bid and offer parities, bid and offer rates for the requested time period.
     """
-    ans = []
-    symbols = [i.upper() for i in symbols.split(',')]
-    symbols = symbols if(len(symbols) >= 2) else symbols[0]
-    start_date = datetime.strptime(start_date, '%Y-%m-%d')
-    end_date = datetime.strptime(end_date, '%Y-%m-%d')
-    if(side is not None and group_by is not None):
-        df = cr.get(symbols, start_date, end_date,
-                    side=side, group_by=group_by).to_dict()
-        for i in df:
-            ans.append({'country': i,
-                        'data': [{'date': k, 'rate': v} for k, v in df[i].items()]})
-    elif((side is not None and group_by is None) or (side is None and group_by is not None)):
-        ans = {"resp": "invalid **Response**"}
-    else:
-        df = cr.get(symbols, start_date, end_date).to_dict()
-        for i in df:
-            ans.append({'country': i,
-                        'data': [{'date': k, 'rate': v} for k, v in df[i].items()]})
-    return ans
+    return(exchange_rate_period(currency, start_date, end_date, orderby, filter, skip, top))
 
 
-@ app.get("/bidask/", tags=["currency"])
-def bid_ask(symbol: str, start_date: str, end_date: str):
-    """
-    - **Request**:
-        - **symbol**: symbol of currency eg USD
-        - **start_date**: format [yyyy-mm-dd]
-        - **end_date**: format [yyyy-mm-dd]
-    - **Response**:
-        - series of bid and ask rates quoted in BRL from start_date till end_date
-    """
-    start_date = datetime.strptime(start_date, '%Y-%m-%d')
-    end_date = datetime.strptime(end_date, '%Y-%m-%d')
-    ask = {}
-    bid = {}
-    symbol = symbol.upper()
-    df = cr.get_symbol(symbol, start_date, end_date).to_dict()
-    for i in df:
-        name = i[1]
-
-        val = df[i]
-        for j, k in val.items():
-            lt = []
-            d = {
-                "date": j,
-                "value": k
-            }
-            lt.append(d)
-            if(i[1] == 'ask'):
-                if(name in ask.keys()):
-                    ol = ask[name]
-                    ol.extend(lt)
-                    ask[name] = ol
-                else:
-                    ask[name] = lt
-            elif(i[1] == 'bid'):
-                if(name in bid.keys()):
-                    ol = bid[name]
-                    ol.extend(lt)
-                    bid[name] = ol
-                else:
-                    bid[name] = lt
-    ans = {}
-    ans.update(ask)
-    ans.update(bid)
-    return(ans)
-
-
-@ app.get("/sgs/", tags=["sgs"])
-def get_sgs(codes: str, start_date: str, end_date: str, last: Optional[int] = None, join: Optional[bool] = False):
-    """
-    - **Request**:
-        - **codes**: eg {'IPCA': 433, 'IGPM': 189}
-        - **start_date**: format [yyyy-mm-dd]
-        - **end_date**: format [yyyy-mm-dd]
-        - **last [Optional]**
-        - **join [Optional]**
-    - **Response**:
-        -series of IPCA/IPCM BRL rates for a given codes
-    """
-    start_date = datetime.strptime(start_date, '%Y-%m-%d')
-    end_date = datetime.strptime(end_date, '%Y-%m-%d')
-    join = 'false' if(join == 'false') else 'true'
-    ans = {}
-    code = eval(codes)
-    if(last is not None and (join == 'true')):
-        ans = sgs.get(code, start_date, end_date, last, join=True)
-    elif(last is None and (join == 'true')):
-        ans = sgs.get(code, start_date, end_date, join=True).to_dict()
-    elif(last is None and (join == 'false')):
-        df = sgs.get(code, start_date, end_date)
-        for i in df:
-            ans.update(i.to_dict())
-    return ans
+if __name__ == "__main__":
+    run("main:app", reload=True)
