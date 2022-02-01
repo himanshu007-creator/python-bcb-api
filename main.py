@@ -4,6 +4,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from uvicorn import run
 import requests
 import json
+import sys
+sys.setrecursionlimit(1500)
+
 
 
 def currency(orderby=None, filter=None, skip=None, top=None):
