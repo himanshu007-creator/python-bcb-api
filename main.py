@@ -281,7 +281,7 @@ def call(currency, date, orderby: Optional[str] = None, filter: Optional[str] = 
 
 
 @app.get("/ExchangeRatePeriod", tags=["Depin"])
-def exchange_rate_period(currency, start_date, end_date, orderby: Optional[str] = None, filter: Optional[str] = None, skip: Optional[int] = None, top: Optional[int] = None):
+def exchange__rate_period(currency, start_date, end_date, orderby: Optional[str] = None, filter: Optional[str] = None, skip: Optional[int] = None, top: Optional[int] = None):
     """
     - **Request**:
         - **currency**: 3 letter symbol e.g 'USD'
